@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const Event = require("./eventModel.js");
 const userSchema = new mongoose.Schema(
   {
     uid: {
