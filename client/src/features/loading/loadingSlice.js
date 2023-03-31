@@ -1,29 +1,19 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialState = {
-    status: 'idle',
-    userObj: null,
-};
-
-const userSlice = createSlice({
-    name: 'user',
-    initialState,
+const loadingSlice = createSlice({
+    name: 'loading',
+    initialState: {
+        isLoading: false,
+    },
     reducers: {
-        signIn: (state, action) => {
-            state.userObj = action.payload;
-            state.status = 'online';
-            window.localStorage.setItem(
-                'timelineApp',
-                state.userObj.token
-            );
+        startLoading: (state) => {
+            state.isLoading = true;
         },
-        signOut: (state) => {
-            state.userObj = initialState.userObj;
-            state.status = 'offline';
-            window.localStorage.removeItem('timelineApp');
+        stopLoading: (state) => {
+            state.isLoading = false;
         },
     },
 });
 
-export const { signIn, signOut } = userSlice.actions;
-export default userSlice.reducer;
+export default loadingSlice.reducer;
+export const { startLoading, stopLoading } = loadingSlice.actions;
