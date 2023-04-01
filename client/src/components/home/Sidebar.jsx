@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 // Icons
+import { IoMdAddCircle } from 'react-icons/io';
 import { TbTimeline } from 'react-icons/tb';
 
 // Components
