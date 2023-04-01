@@ -34,14 +34,14 @@ export default function LandingPage() {
             style={{
                 height: '100vh',
                 width: '100vw',
-                background: backgroundImage,
+                background: `linear-gradient(to right, rgba(0 0 0 / 0.7) 0%, rgba(0 0 0 / 0.2)  100%), url(${themeImages[theme]}) no-repeat center center / cover fixed `,
             }}
         >
             <Loading />
             {/* Navbar */}
             <div className="navbar">
                 <div className="flex-1">
-                    <a className="btn btn-ghost normal-case text-xl">
+                    <a className="btn btn-ghost normal-case text-xl text-primary">
                         TimeThreads
                     </a>
                 </div>
@@ -51,8 +51,21 @@ export default function LandingPage() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col justify-center items-center">
-                <GoogleOneTapLogin />
+            <div className="flex flex-row justify-center items-center h-full">
+                <div className="flex-1 justify-center items-center">
+                    {/* Logo */}
+                </div>
+                <div className="flex-1 flex flex-col justify-center items-center">
+                    <div className="m-4 text-center">
+                        <h1 className="text-6xl font-bold">TimeThreads</h1>
+                        <h2 className="text-2xl font-bold text-accent">
+                            Much more than Google Calendar
+                        </h2>
+                    </div>
+                    <div>
+                        <GoogleOneTapLogin />
+                    </div>
+                </div>
             </div>
         </div>
     );
