@@ -10,6 +10,19 @@ import { TbTimeline } from 'react-icons/tb';
 import ProfilePopover from './ProfilePopover';
 
 export default function Sidebar() {
+    const sidebarButtons = [
+        {
+            tooltip: 'View my Timeline',
+            icon: <TbTimeline size={30} />,
+            handler: () => console.log('View my Timeline button clicked'),
+        },
+        {
+            tooltip: 'Follow a new Timeline',
+            icon: <IoMdAddCircle size={30} />,
+            handler: () => console.log('Follow a new Timeline button clicked'),
+        },
+    ];
+
     const user = useSelector((state) => state.user.userObj);
 
     const handleLogoClick = () => {
@@ -34,22 +47,21 @@ export default function Sidebar() {
                 <div className="divider m-1 before:bg-primary after:bg-primary"></div>
 
                 {/* Other buttons */}
-                <div
-                    className="tooltip tooltip-right tooltip-secondary"
-                    data-tip="View my Timeline"
-                >
-                    <button className="btn btn-circle my-1">
-                        <TbTimeline size={30} />
-                    </button>
-                </div>
-
-                <div
-                    className="tooltip tooltip-right tooltip-secondary"
-                    data-tip="Follow a new Timeline"
-                >
-                    <button className="btn btn-circle my-1">
-                        <IoMdAddCircle size={30} />
-                    </button>
+                <div>
+                    {sidebarButtons.map((button, index) => (
+                        <div
+                            key={index}
+                            className="tooltip tooltip-right tooltip-secondary"
+                            data-tip={button.tooltip}
+                        >
+                            <button
+                                className="btn btn-circle my-1"
+                                onClick={button.handler}
+                            >
+                                {button.icon}
+                            </button>
+                        </div>
+                    ))}
                 </div>
                 {/* End Other buttons */}
             </div>

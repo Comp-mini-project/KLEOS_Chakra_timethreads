@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { themeChange } from 'theme-change';
 
 // Theme Icons
@@ -8,12 +9,23 @@ import { GiCupcake } from 'react-icons/gi';
 import { FaLemon } from 'react-icons/fa';
 import { GiFlowerEmblem } from 'react-icons/gi';
 
+// Actions
+import { setThemeAction } from '../../features/theme/themeSlice';
+
 export default function ThemeSwticher() {
+    const dispatch = useDispatch();
     const [theme, setTheme] = useState('lavender');
 
     useEffect(() => {
         themeChange(false);
+
+        setTheme(localStorage.getItem('theme') || 'lavender');
     }, []);
+
+    useEffect(() => {
+        localStorage.setItem('theme', theme);
+        dispatch(setThemeAction(theme));
+    }, [theme]);
 
     const handleChangeTheme = (e) => {
         const newTheme = e.target.value;

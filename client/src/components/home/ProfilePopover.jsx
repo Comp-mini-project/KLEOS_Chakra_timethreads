@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaSignOutAlt } from 'react-icons/fa';
 
 // Components
-import ThemeSwticher from '../ThemeSwticher';
+import ThemeSwitcher from '../utillity/ThemeSwitcher';
 
 //Actions
 import { signOut } from '../../features/user/userSlice';
@@ -56,7 +56,7 @@ export default function ProfilePopover() {
                     <h4>{username}</h4>
                     <div className="divider m-0 before:bg-primary after:bg-primary"></div>
                     <h4 className="m-2">Choose your theme: </h4>
-                    <ThemeSwticher />
+                    <ThemeSwitcher />
                 </div>
 
                 <button
