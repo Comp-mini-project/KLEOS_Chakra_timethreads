@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const app = express();
+const cloudinary = require('cloudinary');
+const fileUpload = require('express-fileupload');
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
@@ -20,6 +22,7 @@ app.use((req, res, next) => {
     next();
 });
 app.use(express.json({ limit: '10MB' }));
+app.use(fileUpload());
 
 app.use('/api/user', userRouter);
 app.use('/api/timeline', timelineRouter);
@@ -29,7 +32,11 @@ app.use('/api/event', eventRouter);
 app.get('/', (req, res) => {
     res.send('Hello, welocme to timethreads API');
 });
-
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 mongoose.set('strictQuery', false);
 mongoose
     .connect(process.env.CONNECTION_URL, {

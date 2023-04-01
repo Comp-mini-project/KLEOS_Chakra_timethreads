@@ -19,12 +19,10 @@ const userSchema = new mongoose.Schema(
         token: {
             type: String,
         },
-        impEvents: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Event',
-            },
-        ],
+        impEvents: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: 'Event',
+        },
         followedTimelines: [
             {
                 timelineRef: {
