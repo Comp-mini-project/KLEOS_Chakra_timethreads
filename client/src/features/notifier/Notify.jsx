@@ -1,6 +1,5 @@
-import React, { useEffect, useState, } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-
 
 // Icons
 import { RxCross1 } from 'react-icons/rx';
@@ -9,9 +8,6 @@ import { RxCross1 } from 'react-icons/rx';
 import { notifyAction } from './notifySlice';
 
 export default function Notify() {
-
-    
-
     const dispatch = useDispatch();
 
     const [notification, setNotification] = useState({
@@ -52,9 +48,25 @@ export default function Notify() {
     return (
         <div className={`${notification.open ? 'block' : 'hidden'} fixed z-50`}>
             <div className="toast">
-                <div className={`alert alert-${notification.severity}`}>
+                <div
+                    className={`alert ${(() => {
+                        switch (notification.severity) {
+                            case 'success':
+                                return 'alert-success';
+                            case 'error':
+                                return 'alert-error';
+                            case 'warning':
+                                return 'alert-warning';
+                            case 'info':
+                                return 'alert-info';
+                            default:
+                                return 'alert-info';
+                        }
+                    })()}`}
+                >
                     <div>
                         <span>{notification.message}</span>
+                        <span>{notification.severity}</span>
                     </div>
                     <button
                         className="btn btn-square btn-outline btn-xs"
