@@ -17,6 +17,7 @@ export default function Home() {
     const dispatch = useDispatch();
 
     const [groups, setGroups] = useState([]);
+    const [userPersonalEvents, setUserPersonalEvents] = useState([]);
     const [userImpEvents, setUserImpEvents] = useState([]);
     const [currentTimeLine, setCurrentTimeLine] = useState(null);
 
@@ -54,13 +55,17 @@ export default function Home() {
                             return {
                                 name: group.name,
                                 photoURL: group.photoUrl,
+                                id: group._id,
                             };
                         })
                     );
                 }
 
                 // Set the user's important events
-                setUserImpEvents(data.userImpEvents);
+                setUserImpEvents(data.eventList);
+
+                // Set the user's personal events
+                setUserPersonalEvents(data.myevents);
             } catch (error) {
                 console.log(error);
             }
@@ -82,13 +87,24 @@ export default function Home() {
             {/* User Timeline */}
             <div className="flex flex-row w-full">
                 <div className="flex-1 grow h-full p-1">
-                    <GroupList {...{ groups, setCurrentTimeLine }} />
+                    <GroupList
+                        {...{
+                            groups,
+                            setCurrentTimeLine,
+                            setGroups,
+                        }}
+                    />
+                </div>
+                <div className="flex-2 grow h-full p-1">
+                    <TimelineView
+                        {...{
+                            currentTimeLine,
+                            userPersonalEvents,
+                        }}
+                    />
                 </div>
                 <div className="flex-1 grow h-full p-1">
-                    <TimelineView />
-                </div>
-                <div className="flex-1 grow h-full p-1">
-                    <SuperPanel />
+                    <SuperPanel {...{ userImpEvents }} />
                 </div>
             </div>
         </div>
