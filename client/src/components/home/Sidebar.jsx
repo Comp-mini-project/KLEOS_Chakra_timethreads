@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 // Icons
-import { IoMdAddCircle } from 'react-icons/io';
 import { TbTimeline } from 'react-icons/tb';
 
 // Components
@@ -15,11 +14,6 @@ export default function Sidebar() {
             tooltip: 'View my Timeline',
             icon: <TbTimeline size={30} />,
             handler: () => console.log('View my Timeline button clicked'),
-        },
-        {
-            tooltip: 'Follow a new Timeline',
-            icon: <IoMdAddCircle size={30} />,
-            handler: () => console.log('Follow a new Timeline button clicked'),
         },
     ];
 
