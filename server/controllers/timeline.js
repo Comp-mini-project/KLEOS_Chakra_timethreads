@@ -2,13 +2,41 @@ const mongoose = require('mongoose');
 const TimelineModel = require('../models/timelineModel');
 const userModel = require('../models/userModel');
 const EventModel = require('../models/eventModel');
+const cloudinary = require('cloudinary');
 
 exports.createTimeline = async (req, res) => {
     try {
-        const timeline = await TimelineModel.create({
-            ...req.body,
-            admin: req.user._id,
+        const { name, description, tags } = req.body;
+        const tagsArray = tags.split(',');
+
+        const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+            folder: 'avatars',
+            width: 150,
+            crop: 'scale',
         });
+        const timeline = await TimelineModel.create({
+            name,
+            description,
+            tags: tagsArray,
+            admin: req.user._id,
+            photoUrl: {
+                public_id: myCloud.public_id,
+                url: myCloud.secure_url,
+            },
+        });
+        //insert this timeline id in users followedTimelines array
+        const user = await userModel.findOneAndUpdate(
+            { _id: req.user._id },
+            {
+                $addToSet: {
+                    followedTimelines: {
+                        timelineRef: timeline._id,
+                    },
+                },
+            },
+            { new: true, upsert: true }
+        );
+
         res.status(201).json({
             success: true,
             timeline,
@@ -22,6 +50,7 @@ exports.createTimeline = async (req, res) => {
 };
 exports.getTimelineList = async (req, res) => {
     const keyword = req.params.keyword;
+    console.log(keyword);
     try {
         //it shoulf find timelines matching the keyword and from the matching timeline, it should return name and photurl
         const timeline = await TimelineModel.find({
@@ -48,7 +77,7 @@ exports.getTimelineInfo = async (req, res) => {
             throw new Error(`Timeline not found for id ${timelineId}`);
             return;
         }
-        //now, from the user followedTimeline, check if it has this timeline in it
+        // now, from the user followedTimeline, check if it has this timeline in it
         const userdetails = await userModel.findById(userId);
         const followedTimeline = userdetails.followedTimelines;
         const isFollowed = followedTimeline.filter(
@@ -134,6 +163,7 @@ exports.listpersonalimp = async (req, res) => {
             timelineList.push({
                 name: timeline.name,
                 photoUrl: timeline.photoUrl,
+                id: timeline._id,
             });
         }
         const myevents = await EventModel.find({

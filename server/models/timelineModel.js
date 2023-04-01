@@ -10,7 +10,14 @@ const timelineSchema = new mongoose.Schema(
             type: String,
         },
         photoUrl: {
-            type: String,
+            public_id: {
+                type: String,
+                required: true,
+            },
+            url: {
+                type: String,
+                required: true,
+            },
         },
         tags: {
             type: [String],

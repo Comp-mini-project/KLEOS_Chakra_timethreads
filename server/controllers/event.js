@@ -1,11 +1,25 @@
 const mongoose = require('mongoose');
 const EventModel = require('../models/eventModel');
 const TimelineModel = require('../models/timelineModel');
+const userModel = require('../models/userModel');
 exports.createmyEvent = async (req, res) => {
     try {
+        const { tags } = req.body;
+        console.log(req.body);
+        const tagsArray = tags.split(',');
+        const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+            folder: 'avatars',
+            width: 150,
+            crop: 'scale',
+        });
         const event = await EventModel.create({
             ...req.body,
+            tags: tagsArray,
             createdBy: req.user._id,
+            photoUrl: {
+                public_id: myCloud.public_id,
+                url: myCloud.secure_url,
+            },
         });
         res.status(201).json({
             success: true,
@@ -152,6 +166,31 @@ exports.deleteEventfortimeline = async (req, res) => {
         console.log(err);
         res.status(500).json({
             error: 'Error deleting event',
+        });
+    }
+};
+
+exports.addtofavourite = async (req, res) => {
+    try {
+        const event = await EventModel.findById(req.params.id);
+        if (event.createdBy.toString() !== req.user._id.toString()) {
+            throw new Error('Unauthorized');
+        }
+        if (event.type === 'timeline') {
+            throw new Error('You can not add timeline events to favorite');
+        }
+        //add this event id to user important events
+        const userdetails = await userModel.findById(req.user._id);
+        userdetails.impEvents.push(event._id);
+        await userdetails.save();
+        res.status(200).json({
+            success: true,
+            userdetails,
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            error: 'Error adding to favorite',
         });
     }
 };
