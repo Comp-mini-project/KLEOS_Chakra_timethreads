@@ -3,11 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 
 // Actions
-// import { notifyAction } from '../../../../features/notify/notifySlice';
-// import {
-//     startLoading,
-//     stopLoading,
-// } from '../../../../features/loading/loadingSlice';
+import { notifyAction } from '../../../../features/notifier/notifySlice';
+
+import {
+    startLoading,
+    stopLoading,
+} from '../../../../features/loading/loadingSlice';
 
 // Icons
 import { RxCross2 } from 'react-icons/rx';

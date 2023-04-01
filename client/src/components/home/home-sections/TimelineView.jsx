@@ -31,7 +31,6 @@ export default function TimelineView({ currentTimeLine, userPersonalEvents }) {
     });
     const [avatar, setAvatar] = React.useState(null);
     const [avatarPreview, setAvatarPreview] = React.useState(null);
-    console.log(formData);
     const createTimelineImagesChange = (e) => {
         const reader = new FileReader();
 

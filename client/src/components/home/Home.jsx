@@ -38,7 +38,7 @@ export default function Home() {
                         authorization: `Bearer ${token}`,
                     },
                 });
-                console.log(data);
+                // console.log(data);
 
                 // Set the groups that the user is currently following
                 if (data.timelineList.length == 0) {
