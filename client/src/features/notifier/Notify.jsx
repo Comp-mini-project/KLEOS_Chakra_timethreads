@@ -66,10 +66,9 @@ export default function Notify() {
                 >
                     <div>
                         <span>{notification.message}</span>
-                        <span>{notification.severity}</span>
                     </div>
                     <button
-                        className="btn btn-square btn-outline btn-xs"
+                        className="btn btn-square btn-outline btn-xs text-black"
                         onClick={() => handleClose()}
                     >
                         <RxCross1 />

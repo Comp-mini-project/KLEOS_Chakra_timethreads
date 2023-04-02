@@ -7,9 +7,10 @@ const cloudinary = require('cloudinary');
 exports.createTimeline = async (req, res) => {
     try {
         const { name, description, tags } = req.body;
+        console.log(name);
         const tagsArray = tags.split(',');
-
-        const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+        console.log(req.body);
+        const myCloud = await cloudinary.uploader.upload(req.body.avatar, {
             folder: 'avatars',
             width: 150,
             crop: 'scale',
@@ -24,6 +25,7 @@ exports.createTimeline = async (req, res) => {
                 url: myCloud.secure_url,
             },
         });
+        console.log(timeline);
         //insert this timeline id in users followedTimelines array
         const user = await userModel.findOneAndUpdate(
             { _id: req.user._id },
@@ -56,6 +58,7 @@ exports.getTimelineList = async (req, res) => {
         const timeline = await TimelineModel.find({
             name: { $regex: keyword, $options: 'i' },
         }).select('name photoUrl');
+        console.log(timeline);
         res.status(200).json({
             success: true,
             timeline,
@@ -160,16 +163,24 @@ exports.listpersonalimp = async (req, res) => {
             const timeline = await TimelineModel.findById(
                 followedTimelines[i].timelineRef.toString()
             );
-            timelineList.push({
-                name: timeline.name,
-                photoUrl: timeline.photoUrl,
-                id: timeline._id,
-            });
+            timelineList.push({ ...timeline?._doc });
         }
         const myevents = await EventModel.find({
             createdBy: req.user._id,
             type: 'personal',
         });
+        //for each event , also add the flag=0, if it is in impEvents array of user else 1
+        for (let i = 0; i < myevents.length; i++) {
+            const isImp = user.impEvents.filter(
+                (item) => item.toString() === myevents[i]._id.toString()
+            );
+            if (isImp.length > 0) {
+                myevents[i].flag = 0;
+            } else {
+                myevents[i].flag = 1;
+            }
+        }
+
         const impEvents = await userModel.findById(req.user._id);
         const impEventList = impEvents.impEvents;
         const eventList = [];
@@ -195,10 +206,43 @@ exports.listpersonalimp = async (req, res) => {
 
 exports.followtimelinefromtimeline = async (req, res) => {
     const { fromId, toId } = req.body;
+    console.log(fromId, toId);
     try {
         const fromTimeline = await TimelineModel.findById(fromId);
-        fromTimeline.followedTimeline.push({ id: toId });
+        console.log(fromTimeline);
+        const totimelineName = await TimelineModel.findById(toId);
+        fromTimeline.followedTimeline.push({
+            name: totimelineName.name,
+            timelineId: toId,
+        });
         await fromTimeline.save();
+        let totimelineName1 = {
+            name: totimelineName.name,
+            timelineId: toId,
+        };
+        console.log(fromTimeline);
+        res.status(200).json({
+            success: true,
+            fromTimeline,
+            totimelineName1,
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            error: 'Error following timeline',
+        });
+    }
+};
+exports.unfollowtimelinefromtimeline = async (req, res) => {
+    const { fromId, toName } = req.body;
+    try {
+        const fromTimeline = await TimelineModel.findById(fromId);
+        fromTimeline.followedTimeline = fromTimeline.followedTimeline.filter(
+            (item) => item.name !== toName
+        );
+        console.log(fromTimeline);
+        await fromTimeline.save();
+        console.log(fromTimeline);
         res.status(200).json({
             success: true,
             fromTimeline,
@@ -206,7 +250,7 @@ exports.followtimelinefromtimeline = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json({
-            error: 'Error following timeline',
+            error: 'Error unfollowing timeline',
         });
     }
 };
@@ -219,7 +263,7 @@ exports.gettagsoftimeline = async (req, res) => {
         for (let i = 0; i < timeline.followedTimeline.length; i++) {
             let inditags = {};
             const timelinechild = await TimelineModel.findById(
-                timeline.followedTimeline[i]
+                timeline.followedTimeline[i].timelineId
             );
             inditags.name = timelinechild.name;
             inditags.id = timelinechild._id;
@@ -300,6 +344,37 @@ exports.doneresponsesave = async (req, res) => {
         console.log(err);
         res.status(500).json({
             error: 'Error saving done response',
+        });
+    }
+};
+exports.deletetimeline = async (req, res) => {
+    const id = req.params.id;
+    try {
+        console.log('The id is', id);
+        const timeline = await TimelineModel.findById(id);
+        console.log('The timeline is', timeline);
+        if (timeline.admin.includes(req.user._id)) {
+            const user = await userModel.findById(req.user._id).populate(
+                'followedTimelines'
+            );
+            user.followedTimelines = user.followedTimelines.filter(
+                (item) => item.timelineRef.toString() !== id.toString()
+            );
+            console.log(user);
+            await user.save();
+            await TimelineModel.findByIdAndDelete(id);
+            res.status(200).json({
+                success: true,
+            });
+        } else {
+            res.status(401).json({
+                error: 'Unauthorized',
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            error: 'Error deleting timeline',
         });
     }
 };

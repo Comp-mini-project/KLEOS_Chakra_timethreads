@@ -14,17 +14,17 @@ import { setThemeAction } from '../../features/theme/themeSlice';
 
 export default function ThemeSwticher() {
     const dispatch = useDispatch();
-    const [theme, setTheme] = useState('lavender');
+    const [theme, setTheme] = useState(window.localStorage.getItem('theme'));
 
     useEffect(() => {
         themeChange(false);
-
-        setTheme(localStorage.getItem('theme') || 'lavender');
+        dispatch(setThemeAction(theme));
     }, []);
 
     useEffect(() => {
-        localStorage.setItem('theme', theme);
+        themeChange(theme);
         dispatch(setThemeAction(theme));
+        themeChange(theme);
     }, [theme]);
 
     const handleChangeTheme = (e) => {

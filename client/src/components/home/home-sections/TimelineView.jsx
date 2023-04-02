@@ -7,113 +7,29 @@ import './TimelineView.css';
 
 // Components
 import Event from './Event';
+import EventManagerModal from './modals/EventManagerModal';
 
 // Icons
 import { GoPlus } from 'react-icons/go';
 
-const initialstate = {
-    name: '',
-    description: '',
-    tags: '',
-    location: '',
-    allowThread: false,
-    allowVoiceRooms: false,
-    type: 'timeline',
-    startTimestamp: new Date().toISOString().replace('Z', '+05:30'),
-    endTimestamp: new Date().toISOString().replace('Z', '+05:30'),
-};
+// Actions
+import {
+    startLoading,
+    stopLoading,
+} from '../../../features/loading/loadingSlice';
 
-export default function TimelineView({ currentTimeLine, userPersonalEvents }) {
-    const [isModalOpen, setIsModalOpen] = React.useState(false);
-    const [formData, setFormData] = React.useState({
-        ...initialstate,
-        type: currentTimeLine == null ? 'personal' : 'timeline',
-    });
-    const [avatar, setAvatar] = React.useState(null);
-    const [avatarPreview, setAvatarPreview] = React.useState(null);
-    const createTimelineImagesChange = (e) => {
-        const reader = new FileReader();
+export default function TimelineView({
+    currentTimeLine,
+    userPersonalEvents,
+    setUserPersonalEvents,
+    setUserImpEvents,
+    timelineEvents,
+    setTimelineEvents,
+}) {
+    const dispatch = useDispatch();
 
-        reader.onload = () => {
-            if (reader.readyState === 2) {
-                setAvatarPreview(reader.result);
-                setAvatar(reader.result);
-            }
-        };
-
-        reader.readAsDataURL(e.target.files[0]);
-    };
-    const toggleModal = () => {
-        setIsModalOpen(!isModalOpen);
-    };
-    const createEventInTimeline = async (e) => {
-        e.preventDefault();
-        try {
-            const myForm = new FormData();
-            myForm.append('name', formData.name);
-            myForm.append('description', formData.description);
-            myForm.append('tags', formData.tags);
-            myForm.append('location', formData.location);
-            myForm.append('allowThread', formData.allowThread);
-            myForm.append('allowVoiceRooms', formData.allowVoiceRooms);
-            myForm.append('type', formData.type);
-            myForm.append('startTimestamp', formData.startTimestamp);
-            myForm.append('endTimestamp', formData.endTimestamp);
-            myForm.append('avatar', avatar);
-            const token = localStorage.getItem('timelineApp');
-            setIsModalOpen(false);
-            if (currentTimeLine == null && formData.type == 'personal') {
-                const { data } = await axios({
-                    method: 'POST',
-                    url: `${
-                        import.meta.env.VITE_SERVER_URL
-                    }/api/timeline/createmyEvent`,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        authorization: `Bearer ${token}`,
-                    },
-                    data: myForm,
-                });
-                console.log(data);
-            } else {
-                const { data } = await axios({
-                    method: 'POST',
-                    url: `${
-                        import.meta.env.VITE_SERVER_URL
-                    }/api/timeline/createEventfortimeline/${currentTimeLine}`,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        authorization: `Bearer ${token}`,
-                    },
-                    data: myForm,
-                });
-                console.log(data);
-            }
-            // setFormData(initialstate);
-            // setAvatar(null);
-            // setAvatarPreview(null);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-    const handleAllowThreadsChange = (event) => {
-        setFormData({
-            ...formData,
-            allowThread: event.target.checked,
-        });
-    };
-    const handleAllowVoiceRoomsChange = (event) => {
-        setFormData({
-            ...formData,
-            allowVoiceRooms: event.target.checked,
-        });
-    };
-    const handleTypeChange = (event) => {
-        setFormData({
-            ...formData,
-            type: event.target.checked ? 'personal' : 'timeline',
-        });
-    };
+    const [eventManagerModal, setEventManagerModal] = useState(false);
+    const [modifiedEvents, setModifiedEvents] = useState([]);
 
     const [currFocusDate, setCurrFocusDate] = useState({
         year: new Date().getFullYear(),
@@ -136,49 +52,87 @@ export default function TimelineView({ currentTimeLine, userPersonalEvents }) {
         });
     };
 
-    // Split the events that start and end on different days
-    const modifiedEvents = [];
-    userPersonalEvents.forEach((event) => {
-        // Check if the event spans multiple days
-        const startDate = new Date(event.startTimestamp);
-        const endDate = new Date(event.endTimestamp);
-        const isMultiDay = startDate.getDate() !== endDate.getDate();
+    const toggleModal = () => {
+        setEventManagerModal(!eventManagerModal);
+    };
 
-        // Create two separate events for multi-day events
-        if (isMultiDay) {
-            const firstDayEnd = new Date(startDate);
-            firstDayEnd.setHours(23, 59, 59, 999);
-            modifiedEvents.push({
-                ...event,
-                endTimestamp: firstDayEnd.getTime(),
-                timestamp: startDate.getTime(),
-            });
-            const secondDayStart = new Date(endDate);
-            secondDayStart.setHours(0, 0, 0, 0);
-            modifiedEvents.push({
-                ...event,
-                startTimestamp: secondDayStart.getTime(),
-                timestamp: secondDayStart.getTime(),
-            });
-        }
-        // Use the start timestamp for single-day events
-        else {
-            modifiedEvents.push({
+    const sortEvents = (events) => {
+        events.sort((a, b) => a.timestamp - b.timestamp);
+    };
+
+    const createModifiedEvents = (givenEvents) => {
+        let tempEvents = [];
+        givenEvents.forEach((event) => {
+            const startDate = new Date(event.startTimestamp);
+            tempEvents.push({
                 ...event,
                 timestamp: startDate.getTime(),
             });
-        }
-    });
+        });
+        setModifiedEvents(tempEvents);
+        // Sort the events
+        sortEvents(tempEvents);
+    };
 
-    modifiedEvents.sort((a, b) => a.timestamp - b.timestamp);
+    const sortTimelineEvents = (events) => {
+        const tempEvents = events.map((event) => {
+            const startDate = new Date(event.event.startTimestamp);
+            return {
+                ...event,
+                event: {
+                    ...event.event,
+                    timestamp: startDate.getTime(),
+                },
+            };
+        });
 
-    // UseEffect which will run when currFocusDate changes
+        tempEvents.sort((a, b) => a.event.timestamp - b.event.timestamp);
+
+        setTimelineEvents(tempEvents);
+    };
+
+    // Fetch timeline events
     useEffect(() => {
-        // console.log(currFocusDate);
-    }, [currFocusDate]);
+        if (currentTimeLine) {
+            const fetchTimelineEvents = async () => {
+                dispatch(startLoading());
+                const token = localStorage.getItem('timelineApp');
+
+                const { data } = await axios({
+                    method: 'GET',
+                    url: `${
+                        import.meta.env.VITE_SERVER_URL
+                    }/api/event/geteventoftimeline/${currentTimeLine._id}`,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        authorization: `Bearer ${token}`,
+                    },
+                });
+                setTimelineEvents(data.events);
+                console.log('Timeline events fetched', data.events);
+                dispatch(stopLoading());
+            };
+
+            fetchTimelineEvents();
+            // Sort the events
+            sortTimelineEvents(timelineEvents);
+        } else {
+            createModifiedEvents(userPersonalEvents);
+        }
+    }, [currentTimeLine, userPersonalEvents]);
 
     return (
         <div className="bg-base-100 h-full rounded-box flex flex-col p-2 relative">
+            <EventManagerModal
+                {...{
+                    eventManagerModal,
+                    setEventManagerModal,
+                    toggleModal,
+                    currentTimeLine,
+                    setUserPersonalEvents,
+                    userPersonalEvents,
+                }}
+            />
             {/* Timeline header */}
             <div className="p-2 bg-base-200 rounded-box flex flex-row justify-between items-center">
                 <div className="prose prose-sm mx-2">
@@ -187,219 +141,42 @@ export default function TimelineView({ currentTimeLine, userPersonalEvents }) {
                             ? `Timeline: ${currentTimeLine.name}`
                             : 'Your Events'}
                     </h1>
-                    {/* Modal */}
-                    {isModalOpen && (
-                        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center">
-                            <div className="bg-white rounded-lg p-4 w-6/12">
-                                <h1 className="text-lg font-semibold mb-4">
-                                    Create a new Timeline
-                                </h1>
-                                <div className="flex flex-row items-center">
-                                    <label className="text-sm font-semibold">
-                                        Name
-                                    </label>
-                                    <input
-                                        value={formData.name}
-                                        type="text"
-                                        className="input input-bordered input-sm input-secondary mx-3"
-                                        onChange={(event) =>
-                                            setFormData({
-                                                ...formData,
-                                                name: event.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                                <div className="flex flex-row items-center">
-                                    <label className="text-sm font-semibold">
-                                        Description
-                                    </label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(event) =>
-                                            setFormData({
-                                                ...formData,
-                                                description: event.target.value,
-                                            })
-                                        }
-                                        className="input input-bordered input-secondary m-3 input-sm"
-                                        rows="3"
-                                    />
-                                </div>
-                                <div className="flex flex-row mt-1 items-center">
-                                    <label className="text-sm font-semibold">
-                                        Image
-                                    </label>
-                                    <input
-                                        type="file"
-                                        className="input input-ms "
-                                        accept="image/*"
-                                        onChange={createTimelineImagesChange}
-                                    />
-                                    {avatarPreview && (
-                                        <img
-                                            src={avatarPreview}
-                                            className="w-14 h-14 object-cover rounded-full"
-                                            alt="Avatar Preview"
-                                        />
-                                    )}
-                                </div>
-                                <div className="flex flex-row mt-1 items-center">
-                                    <label className="text-sm font-semibold">
-                                        Tags
-                                    </label>
-                                    <input
-                                        value={formData.tags}
-                                        type="text"
-                                        className="input input-bordered input-secondary input-sm mx-3"
-                                        onChange={(event) =>
-                                            setFormData({
-                                                ...formData,
-                                                tags: event.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                                <div className="flex flex-row mt-3 items-center">
-                                    <label className="text-sm font-semibold">
-                                        Location
-                                    </label>
-                                    <input
-                                        value={formData.location}
-                                        type="text"
-                                        className="input input-bordered input-secondary input-sm mx-3"
-                                        onChange={(event) =>
-                                            setFormData({
-                                                ...formData,
-                                                location: event.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                                {currentTimeLine && (
-                                    <>
-                                        <label className="label cursor-pointer">
-                                            <span className="label-text">
-                                                Allow Threads
-                                            </span>
-                                            <input
-                                                type="checkbox"
-                                                className="toggle"
-                                                checked={formData.allowThread}
-                                                onChange={
-                                                    handleAllowThreadsChange
-                                                }
-                                            />
-                                        </label>
-                                        <label className="label cursor-pointer">
-                                            <span className="label-text">
-                                                Allow VoiceRooms
-                                            </span>
-                                            <input
-                                                type="checkbox"
-                                                className="toggle"
-                                                checked={
-                                                    formData.allowVoiceRooms
-                                                }
-                                                onChange={
-                                                    handleAllowVoiceRoomsChange
-                                                }
-                                            />
-                                        </label>
-                                        <label className="label cursor-pointer">
-                                            <span className="label-text">
-                                                Personal
-                                            </span>
-                                            <input
-                                                type="checkbox"
-                                                className="toggle"
-                                                checked={
-                                                    formData.type === 'personal'
-                                                }
-                                                onChange={handleTypeChange}
-                                            />
-                                        </label>
-                                    </>
-                                )}
-                                <div class="flex flex-row space-y-2 mb-3">
-                                    <label
-                                        htmlFor="datetime"
-                                        className="font-medium"
-                                    >
-                                        Event Start Timestamp
-                                    </label>
-                                    <input
-                                        type="datetime-local"
-                                        id="datetime"
-                                        name="datetime"
-                                        class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        required
-                                        value={formData.startTimestamp}
-                                        onChange={(event) =>
-                                            setFormData({
-                                                ...formData,
-                                                startTimestamp:
-                                                    event.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                                <div class="flex flex-row space-y-2 mb-3">
-                                    <label
-                                        htmlFor="datetime"
-                                        className="font-medium"
-                                    >
-                                        Event End Timestamp
-                                    </label>
-                                    <input
-                                        type="datetime-local"
-                                        id="datetime"
-                                        name="datetime"
-                                        class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        required
-                                        value={formData.endTimestamp}
-                                        onChange={(event) =>
-                                            setFormData({
-                                                ...formData,
-                                                endTimestamp:
-                                                    event.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                                <div className="flex justify-end">
-                                    <button
-                                        className="btn btn-secondary mr-2"
-                                        onClick={toggleModal}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        className="btn btn-primary"
-                                        onClick={createEventInTimeline}
-                                    >
-                                        Create
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}{' '}
                 </div>
                 {/* Month and date */}
                 <div className="flex justify-between">
-                    <button className="btn btn-primary">
+                    <button className="btn btn-primary btn-sm">
                         {currFocusDate.month}
                     </button>
                 </div>
             </div>
-
             {/* Timeline events */}
             <div className="flex-1 mt-4 px-2 overflow-y-auto">
-                {modifiedEvents.map((event, index) => (
-                    <Event event={event} key={event._id} index={index} />
-                ))}
+                {currentTimeLine ? (
+                    <>
+                        {timelineEvents?.map((event, index) => (
+                            <Event
+                                event={event.event}
+                                tag={event.eventTag}
+                                key={event._id}
+                                index={index}
+                                setUserImpEvents={setUserImpEvents}
+                            />
+                        ))}
+                    </>
+                ) : (
+                    <>
+                        {modifiedEvents?.map((event, index) => (
+                            <Event
+                                event={event}
+                                tag={null}
+                                key={event._id}
+                                index={index}
+                                setUserImpEvents={setUserImpEvents}
+                            />
+                        ))}
+                    </>
+                )}
             </div>
-
             {/* Add Group Button */}
             <div className="absolute bottom-0 right-0 p-4 z-25">
                 <div

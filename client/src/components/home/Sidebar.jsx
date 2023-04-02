@@ -1,6 +1,5 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 
 // Icons
 import { TbTimeline } from 'react-icons/tb';
@@ -8,12 +7,14 @@ import { TbTimeline } from 'react-icons/tb';
 // Components
 import ProfilePopover from './ProfilePopover';
 
-export default function Sidebar() {
+export default function Sidebar({ getUserImpState }) {
     const sidebarButtons = [
         {
             tooltip: 'View my Timeline',
             icon: <TbTimeline size={30} />,
-            handler: () => console.log('View my Timeline button clicked'),
+            handler: () => {
+                getUserImpState();
+            },
         },
     ];
 

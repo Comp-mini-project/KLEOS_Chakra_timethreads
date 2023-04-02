@@ -12,6 +12,7 @@ const {
     editEventfortimeline,
     deleteEventfortimeline,
     addtofavourite,
+    geteventoftimeline,
 } = require('../controllers/event.js');
 
 router.post('/createmyEvent', auth, createmyEvent);
@@ -23,4 +24,5 @@ router.post('/createEventfortimeline/:id', auth, createEventfortimeline); //id i
 router.post('/editEventfortimeline/:id', auth, editEventfortimeline); //id is event id
 router.post('deleteEventfortimeline/:id', auth, deleteEventfortimeline); //id is event id
 router.post('/addtofavourite/:id', auth, addtofavourite);
+router.get('/geteventoftimeline/:id', auth, geteventoftimeline); //id is timeline id
 module.exports = router;

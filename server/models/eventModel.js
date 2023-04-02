@@ -43,16 +43,16 @@ const eventSchema = new mongoose.Schema(
         location: {
             type: String,
         },
-        photoUrl: {
-            public_id: {
-                type: String,
-                required: true,
-            },
-            url: {
-                type: String,
-                required: true,
-            },
-        },
+        // photoUrl: {
+        //     public_id: {
+        //         type: String,
+        //         required: true,
+        //     },
+        //     url: {
+        //         type: String,
+        //         required: true,
+        //     },
+        // },
     },
     {
         timestamps: true,

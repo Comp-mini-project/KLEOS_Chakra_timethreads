@@ -26,16 +26,17 @@ const timelineSchema = new mongoose.Schema(
             type: [mongoose.Schema.Types.ObjectId],
             ref: 'User',
         },
-        followedTimeline: {
-            type: [mongoose.Schema.Types.ObjectId],
-            ref: 'Timeline',
-        },
-        uncheckedTags: {
-            type: [String],
-        },
-        uncheckedChildren: {
-            type: [mongoose.Schema.Types.ObjectId],
-        },
+        followedTimeline: [
+            {
+                name: {
+                    type: String,
+                },
+                timelineId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Timeline',
+                },
+            },
+        ],
         events: {
             type: [mongoose.Schema.Types.ObjectId],
             ref: 'Event',
